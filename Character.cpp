@@ -44,4 +44,3 @@ std::unique_ptr<Character> Character::createCharacterFromInput() {
 
     return std::make_unique<NPCCharacter>(charName, std::move(ability), 100);
 }
-
