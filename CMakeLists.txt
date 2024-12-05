@@ -45,6 +45,14 @@ include(cmake/Options.cmake)
 add_executable(${PROJECT_NAME}
     main.cpp
     generated/src/Helper.cpp
+        Character.cpp
+        Character.hpp
+        Ability.cpp
+        Ability.hpp
+        NPCCharacter.cpp
+        NPCCharacter.hpp
+        World.cpp
+        World.hpp
 )
 
 include(cmake/CompilerFlags.cmake)
