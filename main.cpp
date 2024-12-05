@@ -1,148 +1,232 @@
 #include <iostream>
-#include <vector>
-#include <string>
-#include <utility>
+#include "World.hpp"
+#include "NPCCharacter.hpp"
+#include "Character.hpp"
+#include <memory>
 
-class Ability {
-private:
-    std::string name;
-    int SpellLevel;
+void displayMainMenu() {
+    std::cout << "===== Main Menu =====\n";
+    std::cout << "1. Create Ability\n";
+    std::cout << "2. Character\n";
+    std::cout << "3. Create NPCCharacter\n";
+    std::cout << "4. Exit\n";
+    std::cout << "Please select an option: ";
+}
 
-public:
-    // Constructor explicativ (pass by value and use std::move)
-    Ability(std::string name, int SpellLevel)
-        : name(std::move(name)), SpellLevel(SpellLevel) {}
+void displayCharacterMenu() {
+    std::cout << "===== Character Menu =====\n";
+    std::cout << "1. Create New Character\n";
+    std::cout << "2. Show Character Details\n";
+    std::cout << "3. Edit Character\n";
+    std::cout << "4. Go Back\n";
+    std::cout << "Please select an option: ";
+}
 
-    // Constructor de copiere
-    Ability(const Ability& other) = default;
+void displayEditCharacterMenu() {
+    std::cout << "===== Edit Character Menu =====\n";
+    std::cout << "1. Edit Name\n";
+    std::cout << "2. Edit Ability\n";
+    std::cout << "3. Go Back\n";
+    std::cout << "Please select an option: ";
+}
 
-    // Operator= de copiere
-    Ability& operator=(const Ability& other) = default;
+void displayNPCMenu() {
+    std::cout << "===== NPC Menu =====\n";
+    std::cout << "1. Create NPCCharacter\n";
+    std::cout << "2. Show NPC Details\n";
+    std::cout << "3. Go Back\n";
+    std::cout << "Please select an option: ";
+}
 
-    // Destructor
-    ~Ability() = default;
+void createCharacter(World& world) {
+    auto character = Character::createCharacterFromInput();
+    world.addCharacter(std::move(character));
+}
 
-    // Operator de afișare
-    friend std::ostream& operator<<(std::ostream& os, const Ability& ability) {
-        os << "Ability: " << ability.name << ", Power Level: " << ability.SpellLevel;
-        return os;
-    }
-};
+void createNPC(World& world) {
+    std::string npcName;
+    std::cout << "Enter NPC name: ";
+    std::cin.ignore();  // Clear the input buffer
+    std::getline(std::cin, npcName);
 
-class Character {
-private:
-    std::string name;
-    Ability primaryAbility;
+    Ability npcAbility = Ability::createAbilityFromInput();
 
-public:
-    // Constructor explicativ (pass by value and use std::move)
-    Character(std::string name, Ability primaryAbility)
-        : name(std::move(name)), primaryAbility(std::move(primaryAbility)) {}
+    int health;
+    std::cout << "Enter NPC health: ";
+    std::cin >> health;
 
-    // Constructor de copiere
-    Character(const Character& other) = default;
+    auto npc = std::make_unique<NPCCharacter>(npcName, std::make_unique<Ability>(npcAbility), health);
+    world.addCharacter(std::move(npc));
 
-    // Operator= de copiere
-    Character& operator=(const Character& other) = default;
+    std::cout << "NPC '" << npcName << "' created successfully.\n";
+}
 
-    // Destructor
-    ~Character() = default;
-
-    // Funcții membre
-    void introduce() const {
-        std::cout << name << " showcases their " << primaryAbility << std::endl;
-    }
-
-    void rest() const {
-        std::cout << name << " is resting to regain strength." << std::endl;
-    }
-
-    // Operator de afișare
-    friend std::ostream& operator<<(std::ostream& os, const Character& character) {
-        os << "Character: " << character.name << ", " << character.primaryAbility;
-        return os;
-    }
-};
-
-class World {
-private:
-    std::vector<Character> characters;
-
-public:
-    // Constructor explicit
-    World() = default;
-
-    // Constructor de copiere
-    World(const World& other) = default;
-
-    // Operator= de copiere
-    World& operator=(const World& other) = default;
-
-    // Destructor
-    ~World() = default;
-
-    // Funcții membre
-    void addCharacter(const Character& character) {
-        characters.push_back(character);
+void showCharacterDetails(const World& world) {
+    if (world.getCharacters().empty()) {
+        std::cout << "No characters available.\n";
+        return;
     }
 
-    void displayCharacters() const {
-        for (const auto& character : characters) {
-            std::cout << character << std::endl;
+    int index = 0;
+    for (const auto& charac : world.getCharacters()) {
+        std::cout << ++index << ". " << charac->getName() << "\n";
+    }
+
+    std::cout << "Select a character to show details: ";
+    std::cin >> index;
+    std::cin.ignore(); // Clear the input buffer
+
+    if (index < 1 || index > world.getCharacters().size()) {
+        std::cout << "Invalid selection.\n";
+        return;
+    }
+
+    world.getCharacters()[index - 1]->display();
+}
+
+void editCharacter(const World& world) {
+    if (world.getCharacters().empty()) {
+        std::cout << "No characters available to edit.\n";
+        return;
+    }
+
+    int index = 0;
+    for (const auto& charac : world.getCharacters()) {
+        std::cout << ++index << ". " << charac->getName() << "\n";
+    }
+
+    std::cout << "Select a character to edit: ";
+    std::cin >> index;
+    std::cin.ignore(); // Clear the input buffer
+
+    if (index < 1 || index > world.getCharacters().size()) {
+        std::cout << "Invalid selection.\n";
+        return;
+    }
+
+    auto& character = world.getCharacters()[index - 1];
+    bool editing = true;
+
+    while (editing) {
+        displayEditCharacterMenu();
+        int editChoice;
+        std::cin >> editChoice;
+        std::cin.ignore(); // Clear the input buffer
+
+        switch (editChoice) {
+            case 1: {
+                // Edit Name
+                std::string newName;
+                std::cout << "Enter new name for " << character->getName() << ": ";
+                std::getline(std::cin, newName);
+                character->setName(newName);
+                break;
+            }
+            case 2: {
+                // Edit Ability
+                Ability newAbility = Ability::createAbilityFromInput();
+                character->setAbility(std::make_unique<Ability>(newAbility));
+                break;
+            }
+            /*case 3: {
+                // Edit Spell Level
+                int newSpellLevel;
+                std::cout << "Enter new spell level for " << character->getName() << ": ";
+                std::cin >> newSpellLevel;
+                std::cin.ignore(); // Clear the input buffer
+                Ability newAbility = Ability::createAbilityFromInput();
+                newAbility.setSpellLevel(newSpellLevel); // Update the spell level
+                character->setAbility(std::make_unique<Ability>(newAbility));
+                break;
+            }*/
+            case 3:
+                editing = false;
+                break;
+            default:
+                std::cout << "Invalid choice.\n";
+                break;
         }
     }
+}
 
-    void introduceAllCharacters() const {
-        for (const auto& character : characters) {
-            character.introduce();
-        }
-    }
-};
-
-// Clasa NPCCharacter moștenește Character
-class NPCCharacter : public Character {
-private:
-    int mana;
-
-public:
-    // Constructor explicativ (pass by value and use std::move)
-    NPCCharacter(std::string name, Ability primaryAbility, int mana)
-        : Character(std::move(name), std::move(primaryAbility)), mana(mana) {}
-
-    // Constructor de copiere
-    NPCCharacter(const NPCCharacter& other) = default;
-
-    // Operator= de copiere
-    NPCCharacter& operator=(const NPCCharacter& other) = default;
-
-    // Destructor
-    ~NPCCharacter() = default;
-
-    // Funcții membre
-    void castSpell() const {
-        std::cout << "Casting a spell with " << mana << " mana remaining." << std::endl;
-    }
-
-    // Operator de afișare
-    friend std::ostream& operator<<(std::ostream& os, const NPCCharacter& mCharacter) {
-        os << static_cast<const Character&>(mCharacter) << ", Mana: " << mCharacter.mana << "%";
-        return os;
-    }
-};
+void createAbility() {
+    std::cout << "Creating a new ability...\n";
+    Ability newAbility = Ability::createAbilityFromInput();
+    newAbility.display();
+}
 
 int main() {
-    Ability fireball("Fireball", 3);
-    Character hero("Aragon", fireball);
-    NPCCharacter mage("Luna", Ability("Dominate Person", 5), 75);
-
     World world;
-    world.addCharacter(hero);
-    world.addCharacter(mage);
+    bool running = true;
 
-    world.displayCharacters();
-    world.introduceAllCharacters();
-    hero.rest();
-    mage.castSpell();
+    while (running) {
+        displayMainMenu();
+        int option;
+        std::cin >> option;
+        std::cin.ignore(); // Clear the input buffer
+
+        switch (option) {
+            case 1: {
+                createAbility();
+                break;
+            }
+            case 2: {
+                displayCharacterMenu();
+                int characterOption;
+                std::cin >> characterOption;
+                std::cin.ignore();  // Clear the input buffer
+
+                switch (characterOption) {
+                    case 1: {
+                        createCharacter(world);
+                        break;
+                    }
+                    case 2: {
+                        showCharacterDetails(world);
+                        break;
+                    }
+                    case 3: {
+                        editCharacter(world);
+                        break;
+                    }
+                    case 4:
+                        break;
+                    default:
+                        std::cout << "Invalid option.\n";
+                        break;
+                }
+                break;
+            }
+            case 3: {
+                displayNPCMenu();
+                int npcOption;
+                std::cin >> npcOption;
+                std::cin.ignore();  // Clear the input buffer
+
+                switch (npcOption) {
+                    case 1: {
+                        createNPC(world);
+                        break;
+                    }
+                    case 2: {
+                        showCharacterDetails(world);  // Assuming NPCs are shown as characters
+                        break;
+                    }
+                    case 3:
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            }
+            case 4: {
+                running = false;
+                break;
+            }
+            default:
+                break;
+        }
+    }
 
     return 0;
 }
