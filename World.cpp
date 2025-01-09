@@ -5,18 +5,13 @@ void World::addCharacter(std::unique_ptr<Character> character) {
     characters.push_back(std::move(character));
 }
 
-void World::displayCharacters() const {
-    if (characters.empty()) {
-        std::cout << "No characters created yet.\n";
-    } else {
-        for (const auto& character : characters) {
-            character->display();
-        }
-    }
+const std::vector<std::unique_ptr<Character>>& World::getCharacters() const {
+    return characters;
 }
 
-void World::introduceAllCharacters() const {
+void World::executeAllCommands() const {
+    std::cout << "Executing all stored commands...\n";
     for (const auto& character : characters) {
-        character->introduce();
+        character->display();
     }
 }

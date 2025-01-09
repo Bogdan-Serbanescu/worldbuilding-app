@@ -1,22 +1,12 @@
 #include "Character.hpp"
-#include "NPCCharacter.hpp"
 #include <iostream>
+#include <limits>
 
-Character::Character(std::string name, std::unique_ptr<Ability> primaryAbility)
-    : name(std::move(name)), primaryAbility(std::move(primaryAbility)) {}
+Character::Character(const std::string& name, std::unique_ptr<Ability> ability)
+    : name(name), ability(std::move(ability)) {}
 
-void Character::introduce() const {
-    std::cout << name << " showcases their ability: ";
-    primaryAbility->display();
-}
-
-/*void Character::rest() const {
-    std::cout << name << " is resting to regain strength." << std::endl;
-}
-*/
-void Character::display() const {
-    std::cout << "Character: " << name << ", ";
-    primaryAbility->display();
+[[nodiscard]] const std::string& Character::getName() const {
+    return name;
 }
 
 void Character::setName(const std::string& newName) {
@@ -24,23 +14,27 @@ void Character::setName(const std::string& newName) {
 }
 
 void Character::setAbility(std::unique_ptr<Ability> newAbility) {
-    primaryAbility = std::move(newAbility);
+    ability = std::move(newAbility);
 }
 
-const std::string& Character::getName() const {
-    return name;
+void Character::display() const {
+    std::cout << "Character: " << name << "\n";
+    if (ability) {
+        ability->display();
+    } else {
+        std::cout << "No ability assigned.\n";
+    }
 }
 
-const Ability* Character::getAbility() const {
-    return primaryAbility.get();
-}
+Character::~Character() = default;
 
 std::unique_ptr<Character> Character::createCharacterFromInput() {
-    std::string charName;
-    std::cout << "Enter Character Name: ";
-    std::getline(std::cin, charName);
+    std::string name;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Clear the buffer
+    std::cout << "Enter character name: ";
+    std::getline(std::cin, name); // Correctly read the character name
 
-    std::unique_ptr<Ability> ability = std::make_unique<Ability>(Ability::createAbilityFromInput());
-
-    return std::make_unique<NPCCharacter>(charName, std::move(ability), 100);
+    auto ability = Ability::createAbilityFromInput();
+    return std::make_unique<Character>(name, std::make_unique<Ability>(ability->getName(), ability->getPowerLevel()));
 }
+

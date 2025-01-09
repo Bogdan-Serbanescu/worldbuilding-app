@@ -2,51 +2,44 @@
 #define ABILITY_HPP
 
 #include <string>
+#include <vector>
+#include <memory>
 #include <iostream>
 
-/**
- * @brief Represents an ability with a name and spell level.
- */
 class Ability {
-private:
- std::string name; ///< The name of the ability.
- int spellLevel; ///< The level of the ability.
-
 public:
- /**
-  * @brief Constructs a new Ability object.
-  *
-  * @param name The name of the ability.
-  * @param spellLevel The spell level of the ability.
-  */
- Ability(std::string name, int spellLevel);
- virtual ~Ability() = default;
+    explicit Ability(const std::string& name = "", int powerLevel = 0);
 
- /**
-  * @brief Gets the name of the ability.
-  *
-  * @return The name of the ability.
-  */
- [[nodiscard]] std::string getName() const;
+    Ability(const std::shared_ptr<Ability>& other)
+        : name(other->name), powerLevel(other->powerLevel) {}
 
- /**
-  * @brief Gets the spell level of the ability.
-  *
-  * @return The spell level of the ability.
-  */
- [[nodiscard]] int getSpellLevel() const;
+    virtual ~Ability() = default;
 
- /**
-  * @brief Displays the ability's details.
-  */
- virtual void display() const;
+    virtual void display() const;
 
- /**
-  * @brief Creates an ability from user input.
-  *
-  * @return A new Ability object created from input.
-  */
- static Ability createAbilityFromInput();
+    [[nodiscard]] virtual std::string getName() const;
+
+    [[nodiscard]] virtual int getPowerLevel() const;
+
+    virtual void addAbility(std::shared_ptr<Ability> ability);
+
+    [[nodiscard]] static std::shared_ptr<Ability> createAbilityFromInput();
+
+protected:
+    std::string name;
+    int powerLevel;
+};
+
+class CompositeAbility : public Ability {
+public:
+    explicit CompositeAbility(const std::string& name);
+
+    void addAbility(std::shared_ptr<Ability> ability) override;
+
+    void display() const override;
+
+private:
+    std::vector<std::shared_ptr<Ability>> abilities;
 };
 
 #endif // ABILITY_HPP

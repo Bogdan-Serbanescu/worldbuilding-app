@@ -53,6 +53,8 @@ add_executable(${PROJECT_NAME}
         NPCCharacter.hpp
         World.cpp
         World.hpp
+        Utility.hpp
+        Utility.cpp
 )
 
 include(cmake/CompilerFlags.cmake)
